@@ -1,17 +1,42 @@
 import { languages } from "../libs/languages";
+import { useState } from 'react';
 
 export default function AssemblyEndgame() {
+
+    const [currentWord, setCurrentWord] = useState("react");
     
-    const progLangs = languages
-        .map(lang => 
-            <p 
-                style={{
-                    backgroundColor: lang.backgroundColor,
-                    color: lang.color
-                }}>
-                {lang.name}
-            </p>
-        );
+    const currentWordElements = currentWord.split("").map((letter, index) => (
+        <span 
+            key={index}    
+            className="letter-showcase"
+        >
+            {letter.toLocaleUpperCase()}
+        </span>
+    ));
+    
+    const languageElements = languages.map((lang) => (
+        <span
+            key={lang.name}
+            className="language-chip"
+            style={{
+                backgroundColor: lang.backgroundColor,
+                color: lang.color,
+            }}
+        >
+            {lang.name}
+        </span>
+    ));
+
+    const alphabet = "abcdefghijklmnopqrstuvwxyz"
+    
+    const keyboard = alphabet.split("").map((key, index) =>
+        <button
+            key={index + key}
+            className="letter-key"
+        >
+            {key.toUpperCase()}
+        </button>
+    )
 
     return(
         <>
@@ -25,9 +50,16 @@ export default function AssemblyEndgame() {
                 <h2>You Win!</h2>
                 <p>Well done! 🎉</p>
             </section>
-            <div className="langugages-container">
-                {progLangs}
-            </div>
+            <section className="language-box">
+                {languageElements}
+            </section>
+            <section className="guess-container">
+                {currentWordElements}    
+            </section>
+            <section className="keyboard">
+              {keyboard}
+            </section>
+            <button className="new-game">New Game</button>
         </main>
         </>
     );
