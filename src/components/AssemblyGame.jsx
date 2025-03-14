@@ -1,23 +1,71 @@
 import { languages } from "../libs/languages";
 import { useState } from 'react';
+import { clsx } from "clsx"
 
 export default function AssemblyEndgame() {
 
+    //State Variables
     const [currentWord, setCurrentWord] = useState("react");
+    const [guessedLetters, setCurrentGuesses] = useState([]);
     
-    const currentWordElements = currentWord.split("").map((letter, index) => (
-        <span 
-            key={index}    
-            className="letter-showcase"
-        >
-            {letter.toLocaleUpperCase()}
-        </span>
-    ));
+    //Derived values
+    const wrongGuessCount = guessedLetters
+        .filter(letter => !currentWord
+        .includes(letter))
+        .length;
     
-    const languageElements = languages.map((lang) => (
-        <span
+    const isGameLost = wrongGuessCount >= languages.length - 1;
+    const isGameWon = currentWord
+        .split("")
+        .every(letter => guessedLetters.includes(letter));
+    const isGameOver = isGameWon || isGameLost;
+
+    function addGuessedLetter(letter) {
+        setCurrentGuesses(prevGuesses => 
+            prevGuesses.includes(letter) ?
+            prevGuesses :
+            [...prevGuesses, letter]
+        );
+    }
+
+    //Static Values
+    const gameWinStatus = 
+        <>
+            <h2>You Win!</h2>
+            <p>Well done! 🎉</p>
+        </>;
+    
+    const gameLostStatus = 
+    <>
+        <h2>Game Over!</h2>
+        <p>You lose! Better start learning Assembly 😭</p>
+    </>;
+
+    const gameStatusClass = clsx("game-status", {
+        'in-progress': !isGameOver,
+        won: isGameWon,
+        lost: isGameLost,
+    })
+
+    const currentWordElements = currentWord.split("").map((letter, index) => {
+        return(
+            <span 
+                key={index}    
+                className={`letter-showcase`}
+            >
+                {guessedLetters.includes(letter) ? letter.toLocaleUpperCase() : ""}
+            </span>
+        );
+    });
+    
+    const languageElements = languages.map((lang, index) => {
+        const className = clsx("language-chip", {
+            lost: index < wrongGuessCount
+        });
+        return(
+            <span
             key={lang.name}
-            className="language-chip"
+            className={className}
             style={{
                 backgroundColor: lang.backgroundColor,
                 color: lang.color,
@@ -25,18 +73,33 @@ export default function AssemblyEndgame() {
         >
             {lang.name}
         </span>
-    ));
+        );
+   });
 
     const alphabet = "abcdefghijklmnopqrstuvwxyz"
     
-    const keyboard = alphabet.split("").map((key, index) =>
-        <button
-            key={index + key}
-            className="letter-key"
-        >
-            {key.toUpperCase()}
-        </button>
-    )
+    const keyboardElement = alphabet.split("").map((letter, index) => {
+        
+        const isGuessed = guessedLetters.includes(letter)
+        const isCorrect = isGuessed && currentWord.includes(letter)
+        const isWrong = isGuessed && !currentWord.includes(letter)
+        
+        const className = clsx({
+            correct: isCorrect,
+            wrong: isWrong
+        })
+        
+        return (
+            <button
+                key={index + letter}
+                className={className}
+                onClick={() => addGuessedLetter(letter)}
+            >
+                {letter.toUpperCase()}
+            </button>
+        );
+       
+    })
 
     return(
         <>
@@ -46,9 +109,10 @@ export default function AssemblyEndgame() {
                 <p>Guess the word within 8 attempts to keep the 
                 programming world safe from Assembly!</p>
             </header>
-            <section className="game-status">
-                <h2>You Win!</h2>
-                <p>Well done! 🎉</p>
+            
+            <section className={gameStatusClass}>
+                {isGameLost && gameLostStatus}
+                {isGameWon && gameWinStatus}
             </section>
             <section className="language-box">
                 {languageElements}
@@ -57,9 +121,9 @@ export default function AssemblyEndgame() {
                 {currentWordElements}    
             </section>
             <section className="keyboard">
-              {keyboard}
+              {keyboardElement}
             </section>
-            <button className="new-game">New Game</button>
+            {isGameOver ? <button className="new-game">New Game</button> : ""}
         </main>
         </>
     );
