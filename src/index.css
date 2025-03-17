@@ -124,6 +124,10 @@ section.guess-container > .letter-showcase {
   border-bottom: 1px solid#F9F4DA;
 }
 
+section.guess-container > .letter-showcase.missed-letter {
+  color: #e55858;
+}
+
 section.keyboard {
   margin-top: 40px;
   max-width: 480px;

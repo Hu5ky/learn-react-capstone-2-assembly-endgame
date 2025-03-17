@@ -1,13 +1,17 @@
 import { languages } from "../libs/languages";
-import { getFarewellText } from "../libs/utils";
+import { getFarewellText, getRandomWord } from "../libs/utils";
 import { useState } from 'react';
 import { clsx } from "clsx"
+import useConfetti from "../hooks/useConfetti";
 
 export default function AssemblyEndgame() {
 
     //State Variables
-    const [currentWord, setCurrentWord] = useState("refactor");
+    const [currentWord, setCurrentWord] = useState(() => getRandomWord());
     const [guessedLetters, setCurrentGuesses] = useState([]);
+    
+    //Custom Hooks
+    const drawConfetti = useConfetti();
 
     function addGuessedLetter(letter) {
         setCurrentGuesses(prevGuesses => 
@@ -36,6 +40,12 @@ export default function AssemblyEndgame() {
     const isGameOver = isGameWon || isGameLost;
 
     //Static Values
+    function resetGame() {
+        console.log('Reset');
+        setCurrentWord(getRandomWord());
+        setCurrentGuesses([]);
+    }
+    
     function renderGameStatus() {
         if(wrongGuessCount > 0 && !isGameOver) {
             return(
@@ -59,25 +69,21 @@ export default function AssemblyEndgame() {
             return null;
         }
     }
-   
-    const gameStatusClass = clsx("game-status", {
-        'in-progress': !isGameOver,
-        won: isGameWon,
-        lost: isGameLost,
-        'lost-language': lostLanguage.length > 0 && !isGameOver,
-    })
-
-    const currentWordElements = currentWord.split("").map((letter, index) => {
-        return(
-            <span 
-                key={index}    
-                className={`letter-showcase`}
-            >
-                {guessedLetters.includes(letter) ? letter.toLocaleUpperCase() : ""}
-            </span>
-        );
-    });
     
+    const missingLetters = currentWord.split("").filter(letter => !guessedLetters.includes(letter));
+    
+    const currentWordElements = currentWord.split("").map((letter, index) => {
+        const shouldRevealLetter = isGameLost || guessedLetters.includes(letter)
+        const letterClassName = clsx(
+            "letter-showcase",
+            isGameLost && !guessedLetters.includes(letter) && "missed-letter"
+        )
+        return (
+            <span key={index} className={letterClassName}>
+                {shouldRevealLetter ? letter.toUpperCase() : ""}
+            </span>
+        )
+    })
     const languageElements = languages.map((lang, index) => {
         
         const isLostLanguage = index < wrongGuessCount;
@@ -125,9 +131,17 @@ export default function AssemblyEndgame() {
         );
     })
 
+    const gameStatusClass = clsx("game-status", {
+        'in-progress': !isGameOver,
+        won: isGameWon,
+        lost: isGameLost,
+        'lost-language': lostLanguage.length > 0 && !isGameOver,
+    })
+
     return(
         <>
         <main>
+            {isGameWon && drawConfetti}
             <header>
                 <h1>Assembly: Endgame</h1>
                 <p>Guess the word within 8 attempts to keep the 
@@ -171,7 +185,7 @@ export default function AssemblyEndgame() {
               {keyboardElement}
             </section>
             
-            {isGameOver ? <button className="new-game">New Game</button> : ""}
+            {isGameOver ? <button onClick={resetGame} className="new-game">New Game</button> : ""}
 
         </main>
         </>
